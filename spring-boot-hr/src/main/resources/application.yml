@@ -1,0 +1,30 @@
+# 在 application.properties 文件中也有 name 属性时，优先使用 application.properties 文件的 name 属性
+# 即 SpringBoot 给 .properties 文件更高的优先级
+name:
+  ymlName
+
+# JavaBeanProperties
+# JavaBeanPropertiesService
+# Application
+spring:
+  boot:
+    service:
+      enable: true
+      security:
+          username: "javaBeanProperty"
+          password: "1234"
+          roles:
+            - "USER"
+            - "ADMIN"
+      setter:
+        enable: false
+        security:
+          username: "javaBeanPropertySetter"
+          password: "4321"
+          roles:
+            - "SUPER_ADMIN"
+            - "GUEST"
+bean:
+  name: "JavaBeanPropertyName"
+  url: "https://www.google.com"
+
