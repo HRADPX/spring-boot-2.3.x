@@ -94,20 +94,21 @@ final class ConfigurationPropertiesBeanRegistrar {
 	/**
 	 * 1) 如果是使用构造器绑定属性，则通过 instanceSupplier 来创建 Bean，即从配置文件中读取属性，则反射调用构造器生成实例，
 	 * 最后在绑定到 PropertySource 中，这种方式实例化的 ConfigurationProperty 在
-	 * 2) 如果是使用其他方式绑定属性，则是通过常规的方式实例化 Bean，然后在 ConfigurationPropertiesBindingPostProcessor
+	 * 2) 如果是getter/setter方式绑定属性，则是通过常规的方式实例化 Bean，然后在 {@link ConfigurationPropertiesBindingPostProcessor}
 	 * 这个后置处理器中将其绑定到 PropertySource 中。
 	 * @see ConfigurationPropertiesBindingPostProcessor#postProcessBeforeInitialization
 	 */
 	private BeanDefinition createBeanDefinition(String beanName, Class<?> type) {
-		// 判断绑定类型，当满足下面任意一个条件时，则是 VALUE_OBJECT 类型的绑定方式：
-		// 1) 构造器上有 @ConstructorBinding 注解时
-		// 2) 类上有 @ConstructorBinding 注解且仅有一个带参构造器
+		// 判断绑定类型，当满足下面任意一个条件时，则是通过构造器的方式绑定：
+		// 1) 当前类有且只有一个带 @ConstructorBinding 注解的构造器上。
+		// 2) 类或父类上有 @ConstructorBinding 注解且仅有一个带参构造器。
 		if (BindMethod.forType(type) == BindMethod.VALUE_OBJECT) {
 			// 这个 BeanDefinition 的构造方法里使用了 Spring 5.0 的新增的一种实例化 Bean 的方法，它给
 			// org.springframework.beans.factory.support.AbstractBeanDefinition#instanceSupplier
-			// 设置了创建 Bean 的方式， Spring 实例化 Bean 时优先使用这个字段创建 Bean 的方式。
+			// 设置了创建 Bean 的方式，Spring 实例化 Bean 时优先使用这个字段创建 Bean 的方式。
 			return new ConfigurationPropertiesValueObjectBeanDefinition(this.beanFactory, beanName, type);
 		}
+		// 通过getter/setter 方法进行绑定，普通的 Bean 实例化的方式
 		GenericBeanDefinition definition = new GenericBeanDefinition();
 		definition.setBeanClass(type);
 		return definition;

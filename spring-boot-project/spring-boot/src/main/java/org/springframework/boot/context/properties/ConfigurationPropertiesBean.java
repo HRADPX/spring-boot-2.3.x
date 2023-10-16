@@ -299,17 +299,21 @@ public final class ConfigurationPropertiesBean {
 
 		/**
 		 * Java Bean using getter/setter binding.
+		 * 通过 getter/setter 方法绑定
 		 */
 		JAVA_BEAN,
 
 		/**
 		 * Value object using constructor binding.
+		 * 通过构造器绑定
 		 */
 		VALUE_OBJECT;
 
+		/**
+		 * 获取属性绑定类型
+		 * @see ConfigurationPropertiesBindConstructorProvider#getBindConstructor(Class, boolean)
+		 */
 		static BindMethod forType(Class<?> type) {
-			// 判断属性绑定类型，在类上(仅有一个带参构造器)或构造器上有 @ConstructorBinding 注解时，是 VALUE_OBJECT
-			// todo huangran 确定 JAVA_BEAN 类型的条件
 			return (ConfigurationPropertiesBindConstructorProvider.INSTANCE.getBindConstructor(type, false) != null)
 					? VALUE_OBJECT : JAVA_BEAN;
 		}

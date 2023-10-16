@@ -1,10 +1,5 @@
 package com.springboot.hr;
 
-import com.springboot.hr.bean.ProfileBean;
-import com.springboot.hr.bean.PropertySourceBean;
-import com.springboot.hr.properties.JavaBeanProperties;
-import com.springboot.hr.properties.JavaBeanPropertiesBySet;
-import com.springboot.hr.properties.JavaBeanPropertyBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -14,6 +9,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
+
+import com.springboot.hr.bean.ProfileBean;
+import com.springboot.hr.bean.PropertySourceBean;
+import com.springboot.hr.properties.JavaBeanProperties;
+import com.springboot.hr.properties.JavaBeanPropertiesBySet;
+import com.springboot.hr.properties.JavaBeanPropertyBean;
 
 @SpringBootApplication
 @EnableConfigurationProperties(value = {JavaBeanProperties.class, JavaBeanPropertiesBySet.class})

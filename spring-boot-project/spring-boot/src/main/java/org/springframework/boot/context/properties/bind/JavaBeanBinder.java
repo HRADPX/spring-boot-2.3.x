@@ -51,6 +51,7 @@ class JavaBeanBinder implements DataObjectBinder {
 	public <T> T bind(ConfigurationPropertyName name, Bindable<T> target, Context context,
 			DataObjectPropertyBinder propertyBinder) {
 		boolean hasKnownBindableProperties = target.getValue() != null && hasKnownBindableProperties(name, context);
+		// 将 target 包装成 bean，会根据 set 方法解析要绑定的属性，存到内部的 properties Map 中
 		Bean<T> bean = Bean.get(target, hasKnownBindableProperties);
 		if (bean == null) {
 			return null;
@@ -88,16 +89,20 @@ class JavaBeanBinder implements DataObjectBinder {
 
 	private <T> boolean bind(BeanSupplier<T> beanSupplier, DataObjectPropertyBinder propertyBinder,
 			BeanProperty property) {
+		// 属性名
 		String propertyName = property.getName();
+		// 属性类型
 		ResolvableType type = property.getType();
 		Supplier<Object> value = property.getValue(beanSupplier);
 		Annotation[] annotations = property.getAnnotations();
+		// 从配置中获取属性值
 		Object bound = propertyBinder.bindProperty(propertyName,
 				Bindable.of(type).withSuppliedValue(value).withAnnotations(annotations));
 		if (bound == null) {
 			return false;
 		}
 		if (property.isSettable()) {
+			// 反射调用 set 方法设置属性值
 			property.setValue(beanSupplier, bound);
 		}
 		else if (value == null || !bound.equals(value.get())) {

@@ -16,14 +16,14 @@
 
 package org.springframework.boot.context.properties;
 
+import java.lang.reflect.Constructor;
+
 import org.springframework.beans.BeanUtils;
 import org.springframework.boot.context.properties.bind.BindConstructorProvider;
 import org.springframework.boot.context.properties.bind.Bindable;
 import org.springframework.core.KotlinDetector;
 import org.springframework.core.annotation.MergedAnnotations;
 import org.springframework.util.Assert;
-
-import java.lang.reflect.Constructor;
 
 /**
  * {@link BindConstructorProvider} used when binding
@@ -43,18 +43,20 @@ class ConfigurationPropertiesBindConstructorProvider implements BindConstructorP
 
 	/**
 	 * 获取属性绑定的构造器
-	 *  1) 先从构造器上找是否有 {@link ConstructorBinding} 注解，有则直接使用该构造器.
-	 *  2) 如果没有找到，再从类上找是否有 {@link ConstructorBinding} 注解，
+	 *  1) 当前类有且只有一个 {@link ConstructorBinding} 注解的构造器，有则直接使用构造方器注入。
+	 *  2) 如果没有找到，再从当前类和父类上找是否有 {@link ConstructorBinding} 注解，且只有一个构造方法，有则使用构造器注入。
 	 *  如果有判断当前类是否有且仅有一个带参的构造器，如果有则使用，无则返回 null.
+	 *  3）其他场景，通过 JavaBean 方法注入。
+	 * @param isNestedConstructorBinding default false
 	 */
 	Constructor<?> getBindConstructor(Class<?> type, boolean isNestedConstructorBinding) {
 		if (type == null) {
 			return null;
 		}
-		// 从构造器上找 ConstructorBinding 注解
+		// 先从构造器上找 ConstructorBinding 注解，并且只能有一个
 		Constructor<?> constructor = findConstructorBindingAnnotatedConstructor(type);
+		// 再从类&&父类级别找 ConstructorBinding 注解，且只有一个带参构造器
 		if (constructor == null && (isConstructorBindingAnnotatedType(type) || isNestedConstructorBinding)) {
-			// 判断是否仅有一个带参构造器
 			constructor = deduceBindConstructor(type);
 		}
 		return constructor;

@@ -61,14 +61,19 @@ public class ConfigurationPropertiesBindingPostProcessor
 		this.applicationContext = applicationContext;
 	}
 
+	/**
+	 * ConfigurationPropertiesBinder 这个 Bean 是在 @EnableConfigurationProperties 注解中注册到容器中
+	 * @see EnableConfigurationPropertiesRegistrar#registerInfrastructureBeans(org.springframework.beans.factory.support.BeanDefinitionRegistry)
+	 *
+	 * 生命周期方法在最后一次调用 {@link BeanPostProcessor} 之前调用
+	 * 生命周期方法调用顺序：PostConstruct > InitializingBean > xml init-method
+	 */
 	@Override
 	public void afterPropertiesSet() throws Exception {
 		// We can't use constructor injection of the application context because
 		// it causes eager factory bean initialization
 		this.registry = (BeanDefinitionRegistry) this.applicationContext.getAutowireCapableBeanFactory();
 		// 通过 BeanFactory.getBean() 获取 ConfigurationPropertiesBinder
-		// 这个 Bean 是在 @EnableConfigurationProperties 注解中注册到容器中
-		/** @see EnableConfigurationPropertiesRegistrar#registerInfrastructureBeans(org.springframework.beans.factory.support.BeanDefinitionRegistry) */
 		this.binder = ConfigurationPropertiesBinder.get(this.applicationContext);
 	}
 
@@ -84,7 +89,7 @@ public class ConfigurationPropertiesBindingPostProcessor
 	}
 
 	private void bind(ConfigurationPropertiesBean bean) {
-		// 如果是通过构造器绑定这里直接跳过，因为实例化时已经通过构造器将属性绑定上了
+		// 如果是通过构造器绑定这里直接跳过，因为实例化时已经通过构造器将属性绑定上了，防止重复...
 		if (bean == null || hasBoundValueObject(bean.getName())) {
 			return;
 		}
@@ -122,6 +127,7 @@ public class ConfigurationPropertiesBindingPostProcessor
 		}
 		// 注册 ConfigurationPropertiesBinder.Factory 和 ConfigurationPropertiesBinder
 		// todo huangran 补充作用
+		// ConfigurationPropertiesBinder：用于构造器方式绑定创建 Bean
 		ConfigurationPropertiesBinder.register(registry);
 	}
 

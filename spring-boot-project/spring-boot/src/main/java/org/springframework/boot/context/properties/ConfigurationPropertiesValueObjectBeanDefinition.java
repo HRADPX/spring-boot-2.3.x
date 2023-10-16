@@ -52,9 +52,7 @@ final class ConfigurationPropertiesValueObjectBeanDefinition extends GenericBean
 		ConfigurationPropertiesBean bean = ConfigurationPropertiesBean.forValueObject(getBeanClass(), this.beanName);
 		ConfigurationPropertiesBinder binder = ConfigurationPropertiesBinder.get(this.beanFactory);
 		try {
-			// 这个方法十分复杂
-			// todo huangran 细看这个方法，优先级--
-			// 简言之，如果是通过构造器注入，那么表示仅有一个构造器，然后从配置文件中读取 JavaBean 中的属性，
+			// 如果是通过构造器注入，那么表示仅有一个构造器，在后续的然后从配置文件中读取 JavaBean 中的属性，
 			// 再使用这个唯一的构造器通过反射生成实例，即实例化时，所有的属性都已经注入
 			return binder.bindOrCreate(bean);
 		}

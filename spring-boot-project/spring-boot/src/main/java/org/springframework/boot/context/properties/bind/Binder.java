@@ -364,6 +364,9 @@ public class Binder {
 		}
 	}
 
+	/**
+	 * 这个方法可能存在递归调用，因为注入的属性的类型可能还是一个 JavaBean
+	 */
 	private <T> Object bindObject(ConfigurationPropertyName name, Bindable<T> target, BindHandler handler,
 			Context context, boolean allowRecursiveBinding) {
 		ConfigurationProperty property = findProperty(name, context);
@@ -387,6 +390,7 @@ public class Binder {
 				throw ex;
 			}
 		}
+		// 绑定属性
 		return bindDataObject(name, target, handler, context, allowRecursiveBinding);
 	}
 
@@ -418,6 +422,7 @@ public class Binder {
 		if (name.isEmpty()) {
 			return null;
 		}
+		// 从配置中获取属性
 		for (ConfigurationPropertySource source : context.getSources()) {
 			ConfigurationProperty property = source.getConfigurationProperty(name);
 			if (property != null) {
@@ -444,10 +449,12 @@ public class Binder {
 		if (!allowRecursiveBinding && context.isBindingDataObject(type)) {
 			return null;
 		}
+		// 获取属性值，在后续的 dataObjectBinder.bind 方法里会调用
 		DataObjectPropertyBinder propertyBinder = (propertyName, propertyTarget) -> bind(name.append(propertyName),
 				propertyTarget, handler, context, false, false);
 		return context.withDataObject(type, () -> {
 			for (DataObjectBinder dataObjectBinder : this.dataObjectBinders) {
+				// 这里可能会
 				Object instance = dataObjectBinder.bind(name, target, context, propertyBinder);
 				if (instance != null) {
 					return instance;
