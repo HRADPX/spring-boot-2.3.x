@@ -16,8 +16,38 @@
 
 package org.springframework.boot.web.embedded.tomcat;
 
-import org.apache.catalina.*;
+import java.io.File;
+import java.io.InputStream;
+import java.lang.reflect.Method;
+import java.net.URL;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import javax.servlet.ServletContainerInitializer;
+
+import org.apache.catalina.Context;
+import org.apache.catalina.Engine;
+import org.apache.catalina.Host;
+import org.apache.catalina.Lifecycle;
+import org.apache.catalina.LifecycleEvent;
+import org.apache.catalina.LifecycleException;
+import org.apache.catalina.LifecycleListener;
+import org.apache.catalina.Manager;
+import org.apache.catalina.Valve;
+import org.apache.catalina.WebResource;
 import org.apache.catalina.WebResourceRoot.ResourceSetType;
+import org.apache.catalina.WebResourceSet;
+import org.apache.catalina.Wrapper;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.core.AprLifecycleListener;
 import org.apache.catalina.loader.WebappLoader;
@@ -45,17 +75,6 @@ import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
-
-import javax.servlet.ServletContainerInitializer;
-import java.io.File;
-import java.io.InputStream;
-import java.lang.reflect.Method;
-import java.net.URL;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.time.Duration;
-import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * {@link AbstractServletWebServerFactory} that can be used to create
@@ -175,8 +194,19 @@ public class TomcatServletWebServerFactory extends AbstractServletWebServerFacto
 		for (Connector additionalConnector : this.additionalTomcatConnectors) {
 			tomcat.getService().addConnector(additionalConnector);
 		}
+		// 准备上下文环境，ServletContextInitializer 设置到 TomcatStarter 中，为后续添加 Servlet 和 Filter 做准备
 		prepareContext(tomcat.getHost(), initializers);
 		// 实例化 TomcatWebServer 时会将 DispatcherServlet 以及一些 Filter 添加到 Tomcat 中
+		/**
+		 * todo huangran tomcat 启动逻辑
+		 * @see ServletContextInitializer
+		 * LifeCycleBase#start() -> startInternal() ->
+		 * async startStopExecutor.submit(new StartChild(child))
+		 * -> StartChild#call()  -> LifeCycleBase#start() -> startInternal()
+		 * -> StandardContext#entry.getKey().onStartup(entry.getValue(), getServletContext())
+		 * -> TcomatStarter#onStartUp() -> ServletWebServerApplicationContext#selfInitialize()
+		 * -> RegistrationBean#onStartup() --> DispatcherServlet
+		 */
 		return getTomcatWebServer(tomcat);
 	}
 
@@ -224,6 +254,7 @@ public class TomcatServletWebServerFactory extends AbstractServletWebServerFacto
 		context.addLifecycleListener(new StaticResourceConfigurer(context));
 		ServletContextInitializer[] initializersToUse = mergeInitializers(initializers);
 		host.addChild(context);
+		// 这里将 ServletContextInitializer 设置到 TomcatStarter 中
 		configureContext(context, initializersToUse);
 		postProcessContext(context);
 	}
